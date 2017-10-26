@@ -1,0 +1,7 @@
+celery>=4.0
+# testing
+flake8
+ipdb
+pytest>=2.9.0,<3
+pytest-cov>=2.3,<3
+mock>=2.0

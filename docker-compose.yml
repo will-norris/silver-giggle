@@ -1,0 +1,54 @@
+version: '2'
+
+services:
+  producer:
+    image: shipperizer/silver-giggle:dev
+    command: make producer
+    build:
+      dockerfile: config/Dockerfile
+      context: .
+    environment:
+      - BROKER_CNX_STRING=amqp://rabbit:rabbit@rabbitmq:5672//
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ./:/var/app
+      - /var/app/.git
+
+  beat:
+    image: shipperizer/silver-giggle:dev
+    command: make beat
+    build:
+      dockerfile: config/Dockerfile
+      context: .
+    environment:
+      - BROKER_CNX_STRING=amqp://rabbit:rabbit@rabbitmq:5672//
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ./:/var/app
+      - /var/app/.git
+
+  consumer:
+    image: shipperizer/silver-giggle:dev
+    command: make consumer
+    build:
+      dockerfile: config/Dockerfile
+      context: .
+    environment:
+      - BROKER_CNX_STRING=amqp://rabbit:rabbit@rabbitmq:5672//
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ./:/var/app
+      - /var/app/.git
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    hostname: rabbit
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=rabbit
+      - RABBITMQ_DEFAULT_PASS=rabbit
+    ports:
+      - 15672
