@@ -3,7 +3,7 @@ from os import environ
 from random import randint
 
 from celery import Celery
-from kombu import Exchange, Queue
+from kombu import Exchange, Queue, binding
 
 
 def init_celery(name, tasks_pkg):
@@ -23,21 +23,14 @@ def init_celery(name, tasks_pkg):
 def init_producer():
     app = init_celery('producer', 'silver_giggle.producer')
 
-    app.conf.task_queues = (
-        Queue('silver_giggle.producer.broadcast', Exchange('silver_giggle.producer.broadcast', type='fanout')),
-        Queue('silver_giggle.producer', Exchange('silver_giggle.producer')),
-    )
-
-    app.conf.task_routes = {
-        'silver_giggle.producer.tasks.log': 'silver_giggle.producer',
-        'silver_giggle.consumer.tasks.log': 'silver_giggle.producer.broadcast',
-    }
+    message_exchange = Exchange('message_exchange')
 
     app.conf.beat_schedule = {
         'log': {
             'task': 'silver_giggle.producer.tasks.log',
             'schedule': timedelta(seconds=5),
             'args': (),
+            'options': {'routing_key': 'content_groups', 'exchange': 'message_exchange'}
         },
     }
 
@@ -47,10 +40,12 @@ def init_producer():
 def init_consumer(producer_name):
     app = init_celery('consumer#{}'.format(randint(1, 1000)), 'silver_giggle.consumer')
 
-    app.conf.task_create_missing_queues = False
+    message_exchange = Exchange('message_exchange')
 
-    app.conf.task_queues = [
-        Queue(app.main, Exchange('silver_giggle.producer.broadcast', type='fanout')),
-    ]
+    app.conf.task_queues = (
+        Queue('consumer_queue', [
+            binding(message_exchange, 'content_groups')
+        ]),
+    )
 
     return app
