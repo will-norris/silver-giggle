@@ -4,10 +4,10 @@ build:
 	pip install -e .
 
 producer:
-	celery -A silver_giggle.producer -Q silver_giggle.producer worker
+	celery -A silver_giggle.producer.app -Q silver_giggle.producer worker
 
 consumer:
-	celery -A silver_giggle.consumer worker
+	celery -A silver_giggle.consumer.app worker
 
 beat:
-	celery -A silver_giggle.producer beat
+	celery -A silver_giggle.producer.app beat
