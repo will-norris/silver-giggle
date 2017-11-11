@@ -9,6 +9,8 @@ services:
       context: .
     environment:
       - BROKER_CNX_STRING=amqp://rabbit:rabbit@rabbitmq:5672//
+      - CELERY_RDB_HOST=0.0.0.0
+      - CELERY_NAME=producer
     depends_on:
       - rabbitmq
     volumes:
@@ -23,13 +25,14 @@ services:
       context: .
     environment:
       - BROKER_CNX_STRING=amqp://rabbit:rabbit@rabbitmq:5672//
+      - CELERY_NAME=beat
     depends_on:
       - rabbitmq
     volumes:
       - ./:/var/app
       - /var/app/.git
 
-  consumer:
+  consumer-a:
     image: shipperizer/silver-giggle:dev
     command: make consumer
     build:
@@ -37,6 +40,22 @@ services:
       context: .
     environment:
       - BROKER_CNX_STRING=amqp://rabbit:rabbit@rabbitmq:5672//
+      - CELERY_NAME=consumer-a
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ./:/var/app
+      - /var/app/.git
+
+  consumer-b:
+    image: shipperizer/silver-giggle:dev
+    command: make consumer
+    build:
+      dockerfile: config/Dockerfile
+      context: .
+    environment:
+      - BROKER_CNX_STRING=amqp://rabbit:rabbit@rabbitmq:5672//
+      - CELERY_NAME=consumer-b
     depends_on:
       - rabbitmq
     volumes:
